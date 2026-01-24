@@ -1,6 +1,6 @@
-import axxios from 'axios';
+import axios from 'axios';
 
-const api = axxios.create(
+const api = axios.create(
     {
         baseURL: 'http://localhost:5041/',
     }

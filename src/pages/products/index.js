@@ -94,7 +94,7 @@ export default function Products() {
 
     async function editProduct(id) {
         try {
-            navigate(`/products/new/${id}`);
+            navigate(`/products/update/${id}`);
         } catch (error) {
             console.error('Error updating product:', error);
             mError('Failed to navigate to edit product. Please try again.');
@@ -113,7 +113,7 @@ export default function Products() {
             <header>
                 <img src={brandImage} alt="Logo" />
                 <span> Welcome, <strong>{userName.toUpperCase()}</strong>!</span>
-                <Link className="button" to="/products/new/0">Add New Product</Link>
+                <Link className="button" to="/products/new">Add New Product</Link>
                 <button onClick={logout} type="button">
                     <FiPower size={18} color="#5f37a4" />
                 </button>

@@ -7,6 +7,7 @@ export function ModalProvider({ children }) {
     const [isOpen, setIsOpen] = useState(false);
     const [modalConfig, setModalConfig] = useState({});
 
+
     function closeModal() {
         setIsOpen(false);
     }
@@ -55,9 +56,12 @@ export function ModalProvider({ children }) {
         setIsOpen(true);
     }
 
+
+    
+
     return (
 
-        <ModalContext.Provider value= {{ confirm, success, mError }}>
+        <ModalContext.Provider value={{ confirm, success, mError }}>
             {children}
             <Modal
                 isOpen={isOpen}
@@ -65,10 +69,10 @@ export function ModalProvider({ children }) {
             />
         </ModalContext.Provider>
     );
-    
+
 }
 
-export function useModal(){
+export function useModal() {
     return useContext(ModalContext);
 }
 

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import './styles.css';
 import api from '../../services/api';
 import brandImage from '../../assets/brand.png';
@@ -6,7 +6,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { FiArrowLeft } from 'react-icons/fi';
 import { useModal } from '../../contexts/ModalContext';
 
-export default function NewProduct() {
+export default function UpdateProduct() {
 
 
 
@@ -14,6 +14,8 @@ export default function NewProduct() {
     const isSubmitting = useRef(false);
 
     const navigate = useNavigate();
+    const { productId } = useParams();
+    const [id, setId] = useState(null);
 
     const [Name, setProductName] = useState('');
     const [Description, setProductDescription] = useState('');
@@ -29,12 +31,33 @@ export default function NewProduct() {
         }
     }
 
+    useEffect(() => {
+        if (productId === '0') return;
+        else loadProduct();
 
-    async function saveProduct(e) {
+    }, productId);
+
+    async function loadProduct() {
+        try {
+            const response = await api.get(`api/Products/${productId}`, authorization);
+
+            setId(response.data.id);
+            setProductName(response.data.name);
+            setProductDescription(response.data.description);
+            setPrice(response.data.price);
+            setStock(response.data.stock);
+            setCategoryId(response.data.categoryId);
+
+        } catch (error) {
+            mError('Failed to load product data. Please try again.');
+            console.error(error);
+            navigate('/products');
+        }
+    }
+
+
+    async function saveOrUpdate(e) {
         e.preventDefault();
-
-        if (isSubmitting.current) return;
-        isSubmitting.current = true;
 
         const data = {
             Name,
@@ -46,59 +69,25 @@ export default function NewProduct() {
 
         }
 
+        console.log(data);
+
         try {
 
+            data.id = id;
+            const response = await api.put(`api/Products/${productId}`, data, authorization);
 
-            const response = await api.post('api/Products', data, authorization);
-
-            if (response && response.status >= 200 && response.status < 300) {
-
-                success('Product created successfully!', () => {
-                    isSubmitting.current = false;
+            if (response.status >= 200 && response.status < 300) {
+                success('Product updated successfully!', () => {
                     navigate('/products');
                 });
-                return;
             }
-            isSubmitting.current = false;
-
-
-            mError('Unexpected response from server.');
 
 
         } catch (error) {
-            isSubmitting.current = false;
 
-            // Axios error guard
-            const isAxiosError = error && error.isAxiosError;
-
-            // status (se existir)
-            const status = isAxiosError ? error.response?.status : null;
-            const serverMessage = isAxiosError ? error.response?.data : null;
-
-            console.error('Full error object:', error);
-            console.error('Axios response (if any):', error?.response);
-
-            if (status === 401) {
-                mError('Unauthorized. Please log in again.');
-                navigate('/');
-                return;
-            }
-
-            if (status === 400) {
-                mError('Bad Request. Please check the entered data.');
-                return;
-            }
-
-            // caso de erro de rede (sem resposta)
-            if (isAxiosError && !error.response) {
-                mError('Network error. Please check your connection and try again.');
-                return;
-            }
-
-            // fallback genérico
-            mError('Error creating new product, try again.');
+            mError('Error updating product, try again.');
+            console.error(error);
         }
-
     }
 
     return (
@@ -106,7 +95,7 @@ export default function NewProduct() {
             <div className="content">
                 <section className="form">
                     <img src={brandImage} alt="Logo" />
-                    <h1>Add New Product</h1>
+                    <h1>{productId === '0' ? 'Add New Product' : 'Update Product'}</h1>
                     <p>Enter the product details.</p>
                     <Link className="back-link" to="/products">
                         <FiArrowLeft size={16} color="#5f37a4" />
@@ -115,14 +104,14 @@ export default function NewProduct() {
                     </Link>
 
                 </section>
-                <form onSubmit={saveProduct}>
+                <form onSubmit={saveOrUpdate}>
                     <input placeholder="Product Name" value={Name} onChange={e => setProductName(e.target.value)} />
                     <input placeholder="Product Description" value={Description} onChange={e => setProductDescription(e.target.value)} />
                     <input placeholder="Price" value={Price} onChange={e => setPrice(e.target.value)} />
                     <input placeholder="Stock" value={Stock} onChange={e => setStock(e.target.value)} />
                     <input placeholder="Category" value={CategoryId} onChange={e => setCategoryId(e.target.value)} />
 
-                    <button className="button" type="submit" disabled={isSubmitting.current} aria-busy={isSubmitting.current}>{isSubmitting.current ? 'Adding...' : 'Add Product'}</button>
+                    <button className="button" type="submit">Update Product</button>
                 </form>
 
             </div>
