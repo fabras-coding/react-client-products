@@ -4,24 +4,26 @@ import brandImage from '../../assets/brand.png';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiPower, FiEdit, FiTrash2 } from 'react-icons/fi';
 import { useModal } from '../../contexts/ModalContext';
+import { askProductQuestion } from "../../services/productsAI";
 
 import api from '../../services/api';
+import { formToJSON } from "axios";
 
 
 export default function Products() {
 
 
     const {confirm, success, mError} = useModal();
-
-    
     const [products, setProducts] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-
     const PAGE_SIZE = 10;
 
     const userName = localStorage.getItem('userName');
     const token = localStorage.getItem('token');
     const navigate = useNavigate();
+
+    const [productAnswer, setProductAnswer] = useState('');
+
 
     const authorization = {
         headers: {
@@ -75,6 +77,19 @@ export default function Products() {
 
     }
 
+    async function askQuestion(productId, question) {
+       
+        try {
+            const serializedQuestion = JSON.stringify({ question });
+            console.log('Serialized question:', serializedQuestion);
+            const response = await askProductQuestion(productId, serializedQuestion);
+            setProductAnswer(response);
+        } catch (error) {
+            mError('Failed to ask question. Please try again.');
+            console.error('Error asking question:', error);
+        }
+    }
+
 
 
     async function deleteProduct(id) {
@@ -124,10 +139,22 @@ export default function Products() {
                 {paginatedProducts.map(product => (
                     <li key={product.id}>
 
-                        <strong>Product Name</strong>
+                        <div className="product-image-wrapper">
+                            {product.image ? (
+                                <img
+                                    src={product.image}
+                                    alt={product.name}
+                                    className="product-image"
+                                />
+                            ) : (
+                                <div className="product-image-placeholder">No image available</div>
+                            )}
+                        </div>
+
+                        
                         <p>{product.name}</p>
 
-                        <strong>Price:</strong>
+                        
                         <p>{Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(product.price)}</p>
 
                         <strong>Description: </strong>
@@ -135,6 +162,21 @@ export default function Products() {
 
                         <strong>Category:</strong>
                         <p>{product.categoryId}</p>
+
+                        <strong>Make some question about this product:</strong>
+                        <input
+                            type="text"
+                            placeholder="Ask a question..."
+                            onKeyDown={e => {
+                                if (e.key === 'Enter') {
+                                    askQuestion(product.id, e.target.value);
+                                    e.target.value = '';
+                                }
+                            }}
+                        />
+                        {productAnswer && (
+                            <p><strong>Answer:</strong> {productAnswer}</p>
+                        )}
 
                         <button onClick={() => editProduct(product.id)} type="button">
                             <FiEdit size={20} color="#5f37a4" />

@@ -5,6 +5,7 @@ import brandImage from '../../assets/brand.png';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { FiArrowLeft } from 'react-icons/fi';
 import { useModal } from '../../contexts/ModalContext';
+import { fetchCategories } from '../../services/categories';
 
 export default function UpdateProduct() {
 
@@ -22,6 +23,12 @@ export default function UpdateProduct() {
     const [Price, setPrice] = useState('');
     const [Stock, setStock] = useState('');
     const [CategoryId, setCategoryId] = useState('');
+    const [categories, setCategories] = useState([]);
+
+    categories.length === 0 && fetchCategories().then(setCategories).catch(error => {
+        console.error('Error fetching categories:', error);
+        mError('Failed to fetch categories. Please try again.');
+    });
 
     const token = localStorage.getItem('token');
 
@@ -109,7 +116,13 @@ export default function UpdateProduct() {
                     <input placeholder="Product Description" value={Description} onChange={e => setProductDescription(e.target.value)} />
                     <input placeholder="Price" value={Price} onChange={e => setPrice(e.target.value)} />
                     <input placeholder="Stock" value={Stock} onChange={e => setStock(e.target.value)} />
-                    <input placeholder="Category" value={CategoryId} onChange={e => setCategoryId(e.target.value)} />
+                    <select placeholder="Select Category" value={CategoryId} onChange={e => setCategoryId(e.target.value)}>
+                        {categories.map(category => (
+                            <option key={category.id} value={category.id}>
+                                {category.name}
+                            </option>
+                        ))}
+                    </select>
 
                     <button className="button" type="submit">Update Product</button>
                 </form>
